@@ -12,4 +12,5 @@ public partial class Author
     public DateTime? Createdat { get; set; }
 
     public virtual ICollection<Book> Books { get; set; } = new List<Book>();
+
 }
