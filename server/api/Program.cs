@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MyDbContext>(conf =>
 {
-    conf.UseNpgsql("Host=ep-rough-butterfly-ag29xb3y-pooler.c-2.eu-central-1.aws.neon.tech;Port=5432;Database=neondb;Username=neondb_owner;Password=npg_4iTInVwJ5Zly;SslMode=Require;ChannelBinding=Require;");
+    conf.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
     
 });
 
