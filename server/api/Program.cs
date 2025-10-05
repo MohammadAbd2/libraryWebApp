@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.OpenApi.Models; // swagger package
 using api;
 using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
@@ -16,22 +17,41 @@ builder.Services.AddDbContext<MyDbContext>(conf =>
     
 });
 
+// Add Swagger services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "My API",
+        Version = "v1",
+        Description = "Sample API with Swagger for local testing"
+    });
+});
+
+builder.Services.AddCors();
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+
 
 var app = builder.Build();
 
-app.MapGet("/", ([FromServices] MyDbContext dbContext) =>
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    
-
-    var author = new Author()
-    {
-        Id = Guid.NewGuid().ToString(),
-        Name = "Neon"
-    };
-    dbContext.Authors.Add(author);
-    dbContext.SaveChanges();
-    var authors = dbContext.Authors.ToList();
-    return authors;
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API v1");
+    options.RoutePrefix = string.Empty; // makes Swagger UI load at http://localhost:8080/api
 });
+
+app.UseRouting();
+app.UseCors(config => config
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowAnyOrigin()
+    .SetIsOriginAllowed(x => true));
+
+
+
+app.MapControllers();
 
 app.Run();
