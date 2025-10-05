@@ -1,72 +1,84 @@
 using efscaffold.Entities;
-using efscaffold.Entities;
 using Infrastructure.Postgres.Scaffolding;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Entity;
 
 [ApiController]
-[Route("[controller]")]
-public class Authors : ControllerBase
+[Route("api/[controller]")] // => /api/authors
+public class AuthorsController : ControllerBase
 {
     private readonly MyDbContext _dbContext;
-    // ✅ Constructor injection — ASP.NET will provide it automatically
-    public Authors (MyDbContext dbContext)
+
+    public AuthorsController(MyDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    
-    // on get request
+
+    // GET /api/authors
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var authors = _dbContext.Authors.ToList();
+        var authors = await _dbContext.Authors.ToListAsync();
         return Ok(authors);
     }
-    // on post request 
-    [HttpPost]
-    public IActionResult Post([FromBody] Author author)
+
+    // GET /api/authors/{id}
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
     {
-        _dbContext.Authors.Add(author);
-        _dbContext.SaveChanges();
-        return Ok("data has been recived");
+        var author = await _dbContext.Authors.FindAsync(id);
+        if (author == null)
+            return NotFound(new { message = $"Author with ID '{id}' not found." });
+
+        return Ok(author);
     }
-    // on put request
-    [HttpPut]
-    public IActionResult Put([FromBody] Author author)
+
+    // POST /api/authors
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] Author author)
     {
-        // validation before handling the request
-        if (author == null || string.IsNullOrEmpty(author.Id))
-            return BadRequest("Invalid author data.");
+        if (author == null || string.IsNullOrWhiteSpace(author.Name))
+            return BadRequest(new { message = "Invalid author data." });
 
-        // Find existing author in DB
-        var existingAuthor = _dbContext.Authors.FirstOrDefault(a => a.Id == author.Id);
+        if (string.IsNullOrEmpty(author.Id))
+            author.Id = Guid.NewGuid().ToString();
+
+        _dbContext.Authors.Add(author);
+        await _dbContext.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById), new { id = author.Id }, author);
+    }
+
+    // PUT /api/authors/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Put(string id, [FromBody] Author updatedAuthor)
+    {
+        if (updatedAuthor == null || string.IsNullOrWhiteSpace(updatedAuthor.Name))
+            return BadRequest(new { message = "Invalid author data." });
+
+        var existingAuthor = await _dbContext.Authors.FindAsync(id);
         if (existingAuthor == null)
-            return NotFound($"Author with ID '{author.Id}' not found.");
+            return NotFound(new { message = $"Author with ID '{id}' not found." });
 
-        // Update the fields
-        existingAuthor.Name = author.Name;
+        existingAuthor.Name = updatedAuthor.Name;
+        await _dbContext.SaveChangesAsync();
 
-        // Save changes
-        _dbContext.SaveChanges();
-
-        // Return updated entity
         return Ok(existingAuthor);
     }
-    // on delete request
-    [HttpDelete]
-    public IActionResult Delete([FromBody] Author author)
+
+    // DELETE /api/authors/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
     {
-        if (author == null || string.IsNullOrEmpty(author.Id))
-            return BadRequest("Invalid author data.");
+        var author = await _dbContext.Authors.FindAsync(id);
+        if (author == null)
+            return NotFound(new { message = $"Author with ID '{id}' not found." });
 
-        var existingAuthor = _dbContext.Authors.FirstOrDefault(a => a.Id == author.Id);
-        if (existingAuthor == null)
-            return NotFound($"Author with ID '{author.Id}' not found.");
+        _dbContext.Authors.Remove(author);
+        await _dbContext.SaveChangesAsync();
 
-        _dbContext.Authors.Remove(existingAuthor);
-        _dbContext.SaveChanges();
-
-        return Ok($"Author '{existingAuthor.Name}' was deleted successfully.");
+        return NoContent();
     }
 }
