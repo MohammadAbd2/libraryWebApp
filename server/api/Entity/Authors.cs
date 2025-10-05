@@ -31,4 +31,42 @@ public class Authors : ControllerBase
         _dbContext.SaveChanges();
         return Ok("data has been recived");
     }
+    // on put request
+    [HttpPut]
+    public IActionResult Put([FromBody] Author author)
+    {
+        // validation before handling the request
+        if (author == null || string.IsNullOrEmpty(author.Id))
+            return BadRequest("Invalid author data.");
+
+        // Find existing author in DB
+        var existingAuthor = _dbContext.Authors.FirstOrDefault(a => a.Id == author.Id);
+        if (existingAuthor == null)
+            return NotFound($"Author with ID '{author.Id}' not found.");
+
+        // Update the fields
+        existingAuthor.Name = author.Name;
+
+        // Save changes
+        _dbContext.SaveChanges();
+
+        // Return updated entity
+        return Ok(existingAuthor);
+    }
+    // on delete request
+    [HttpDelete]
+    public IActionResult Delete([FromBody] Author author)
+    {
+        if (author == null || string.IsNullOrEmpty(author.Id))
+            return BadRequest("Invalid author data.");
+
+        var existingAuthor = _dbContext.Authors.FirstOrDefault(a => a.Id == author.Id);
+        if (existingAuthor == null)
+            return NotFound($"Author with ID '{author.Id}' not found.");
+
+        _dbContext.Authors.Remove(existingAuthor);
+        _dbContext.SaveChanges();
+
+        return Ok($"Author '{existingAuthor.Name}' was deleted successfully.");
+    }
 }

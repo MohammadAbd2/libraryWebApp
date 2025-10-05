@@ -43,7 +43,9 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty; // makes Swagger UI load at http://localhost:8080/api
 });
 
+
 app.UseRouting();
+
 app.UseCors(config => config
     .AllowAnyHeader()
     .AllowAnyMethod()
