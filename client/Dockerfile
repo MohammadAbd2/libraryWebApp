@@ -10,7 +10,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 RUN echo $'\
 server { \n\
-    listen 8080; \n\
+    listen 5000; \n\
     location / { \n\
         root /usr/share/nginx/html; \n\
         index index.html index.htm; \n\
@@ -18,5 +18,5 @@ server { \n\
     } \n\
 }' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 8080
+EXPOSE 5000
 CMD ["nginx", "-g", "daemon off;"]

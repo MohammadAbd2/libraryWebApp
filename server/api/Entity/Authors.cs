@@ -79,6 +79,6 @@ public class AuthorsController : ControllerBase
         _dbContext.Authors.Remove(author);
         await _dbContext.SaveChangesAsync();
 
-        return NoContent();
+        return Ok("Author deleted.");
     }
 }
